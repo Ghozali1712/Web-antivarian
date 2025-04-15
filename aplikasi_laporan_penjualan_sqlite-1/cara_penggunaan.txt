@@ -1,0 +1,47 @@
+# CARA MENJALANKAN APLIKASI LAPORAN PENJUALAN
+
+## Versi Online (Dengan Database)
+
+Jika ingin menggunakan versi yang terhubung ke database (data bisa diakses dari perangkat berbeda):
+
+1. Pastikan Python sudah terinstal di komputer Anda (Python 3.7+)
+
+2. Buka Command Prompt dan install paket yang diperlukan:
+   pip install streamlit pandas numpy sqlalchemy psycopg2-binary python-dotenv
+
+3. Buat file .env di folder yang sama dengan app.py, isi dengan:
+   DATABASE_URL=postgres://username:password@hostname:port/database_name
+   (Ganti dengan kredensial database PostgreSQL Anda)
+
+4. Jalankan aplikasi dengan perintah:
+   streamlit run app.py
+
+## Versi Offline (Tanpa Database)
+
+Jika Anda tidak ingin menggunakan database dan hanya menyimpan data secara lokal:
+
+1. Pastikan Python sudah terinstal di komputer Anda (Python 3.7+)
+
+2. Buka Command Prompt dan install paket yang diperlukan:
+   pip install streamlit pandas numpy
+
+3. Gunakan file app_local.py yang sudah disediakan:
+   streamlit run app_local.py
+
+---
+
+## CATATAN PENTING
+
+- Versi lokal akan menyimpan data dalam file JSON di komputer Anda
+- Versi database membutuhkan akses ke database PostgreSQL 
+- Untuk berbagi aplikasi agar dapat diakses di jaringan lokal, jalankan dengan:
+  streamlit run app.py --server.address=0.0.0.0 --server.port=5000
+
+- Struktur folder yang dibutuhkan:
+  * app.py atau app_local.py
+  * folder .streamlit dengan file config.toml di dalamnya
+  * file .env (jika menggunakan database)
+
+---
+
+Jika mengalami kesulitan, baca file README.md untuk informasi lebih lengkap.

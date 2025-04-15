@@ -1,0 +1,148 @@
+====================================================
+PANDUAN LENGKAP APLIKASI LAPORAN PENJUALAN
+====================================================
+Dibuat oleh: Bang Imam
+====================================================
+
+------------------------------------------------
+CARA MENJALANKAN APLIKASI (VERSI DENGAN SQLITE)
+------------------------------------------------
+
+1. Extract file "aplikasi_laporan_penjualan_sqlite.zip" ke folder pilihan Anda
+
+2. Pastikan Python sudah terinstal di komputer Anda (Python 3.7+)
+   Untuk cek apakah Python sudah terinstal:
+   - Buka Command Prompt (CMD)
+   - Ketik: python --version
+   - Jika belum terinstal, download dari python.org
+
+3. Buka Command Prompt (CMD)
+
+4. Navigasi ke folder tempat Anda meng-extract file:
+   cd path\ke\folder\aplikasi
+   
+   Contoh:
+   cd C:\Users\Nama\Desktop\aplikasi_laporan_penjualan
+
+5. Install paket yang diperlukan (jika belum):
+   pip install streamlit pandas numpy sqlalchemy
+   
+   Atau gunakan file requirements_lengkap.txt:
+   pip install -r requirements_lengkap.txt
+
+6. Jalankan aplikasi SQLite:
+   streamlit run app_sqlite.py
+
+7. Aplikasi akan otomatis terbuka di browser dan sudah terhubung dengan 
+   database yang ada (sales_database.db) yang berisi data contoh.
+
+------------------------------------------------
+UNTUK BERBAGI APLIKASI DI JARINGAN LOKAL
+------------------------------------------------
+
+Jika Anda ingin mengakses aplikasi dari perangkat lain dalam jaringan yang sama:
+
+1. Jalankan aplikasi dengan perintah:
+   streamlit run app_sqlite.py --server.address=0.0.0.0 --server.port=5000
+
+2. Cari tahu alamat IP komputer Anda:
+   - Buka CMD baru
+   - Ketik: ipconfig
+   - Catat alamat IP di bagian "IPv4 Address"
+
+3. Pada perangkat lain di jaringan yang sama, buka browser dan akses:
+   http://[alamat-ip-komputer-anda]:5000
+   
+   Contoh:
+   http://192.168.1.5:5000
+
+------------------------------------------------
+TENTANG VERSI APLIKASI
+------------------------------------------------
+
+1. app_sqlite.py - Versi dengan database SQLite (DISARANKAN)
+   - Database sudah termasuk (sales_database.db)
+   - Tidak perlu setup database terpisah
+   - Mudah dijalankan di komputer mana saja
+
+2. app_local.py - Versi dengan penyimpanan file JSON lokal
+   - Menyimpan data dalam file JSON
+   - Paling sederhana tetapi tidak untuk berbagi data
+
+3. app.py - Versi dengan PostgreSQL
+   - Memerlukan server PostgreSQL terpisah
+   - Untuk penggunaan tim besar atau aplikasi tingkat lanjut
+   - Perlu setup database lebih kompleks
+
+------------------------------------------------
+CARA MENGGUNAKAN APLIKASI
+------------------------------------------------
+
+1. Pengaturan Toko dan Periode
+   - Isi nama toko dan pilih tanggal periode
+   - Klik "Simpan Pengaturan"
+
+2. Manajemen Produk
+   - Tambah produk baru: isi nama produk dan target, klik "Simpan Produk"
+   - Update penjualan: masukkan jumlah penjualan Shift 1 dan Shift 2, klik "Simpan"
+   - Edit produk: klik "Edit" pada produk yang ingin diubah
+   - Hapus produk: klik "Hapus" pada produk yang ingin dihapus
+
+3. Laporan
+   - Klik "Generate Laporan" untuk membuat laporan
+   - Laporan berisi format teks untuk di-copy paste dan visualisasi data
+
+4. Reset Data
+   - Klik "Reset Semua Data" jika ingin menghapus semua data
+   - Centang konfirmasi dan data akan direset
+
+------------------------------------------------
+BERBAGI DATABASE SQLITE DENGAN PERANGKAT LAIN
+------------------------------------------------
+
+Untuk berbagi data dengan perangkat lain:
+
+1. Salin file "sales_database.db" ke perangkat lain yang juga menjalankan aplikasi
+2. Pastikan file tersebut berada di folder yang sama dengan app_sqlite.py
+3. Jalankan aplikasi seperti biasa dan data akan tersedia di perangkat lain
+
+------------------------------------------------
+TROUBLESHOOTING
+------------------------------------------------
+
+1. Jika terjadi error saat instalasi:
+   - Pastikan Python dan pip terinstal dengan benar
+   - Coba gunakan virtual environment:
+     python -m venv venv
+     venv\Scripts\activate (Windows) atau source venv/bin/activate (Mac/Linux)
+     pip install -r requirements_lengkap.txt
+
+2. Jika aplikasi tidak terbuka di browser:
+   - Periksa output di CMD untuk URL aplikasi
+   - Coba buka manual URL yang ditampilkan (biasanya http://localhost:8501)
+
+3. Jika data tidak tersimpan:
+   - Pastikan Anda memiliki izin menulis ke folder aplikasi
+   - Periksa apakah file database (sales_database.db) bisa diakses/ditulis
+
+4. Jika aplikasi tidak bisa diakses dari perangkat lain:
+   - Pastikan alamat IP benar
+   - Periksa firewall komputer server
+   - Pastikan menggunakan parameter --server.address=0.0.0.0
+
+------------------------------------------------
+INFORMASI TAMBAHAN
+------------------------------------------------
+
+- File database: sales_database.db (SQLite database)
+- File panduan lengkap: README.md (dokumentasi lengkap)
+- File panduan SQLite: panduan_sqlite.md (panduan khusus SQLite)
+
+Untuk pertanyaan atau bantuan lebih lanjut, lihat dokumentasi lengkap
+di file README.md atau panduan_sqlite.md
+
+====================================================
+Aplikasi ini dibuat oleh: Bang Imam
+
+Copyright © 2024 - Semua hak cipta dilindungi
+====================================================
