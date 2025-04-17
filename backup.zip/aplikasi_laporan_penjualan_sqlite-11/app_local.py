@@ -4,8 +4,6 @@ import numpy as np
 import datetime
 import json
 import os
-import sqlalchemy
-from sqlalchemy import create_engine, Table, Column, Integer, String, Float, Date, MetaData, ForeignKey, text
 
 # Set page config
 st.set_page_config(
@@ -14,154 +12,48 @@ st.set_page_config(
     layout="wide"
 )
 
-# Database connection (SQLite)
-DATABASE_PATH = "sales_database.db"
-engine = create_engine(f"sqlite:///{DATABASE_PATH}")
-metadata = MetaData()
-
-# Define tables
-stores = Table(
-    'stores', metadata,
-    Column('id', Integer, primary_key=True),
-    Column('store_name', String),
-    Column('start_date', String),  # Tanggal mulai periode
-    Column('end_date', String)     # Tanggal berakhir periode
-)
-
-products = Table(
-    'products', metadata,
-    Column('id', Integer, primary_key=True),
-    Column('store_id', Integer, ForeignKey('stores.id')),
-    Column('name', String),
-    Column('target', Integer),
-    Column('shift1', Integer),
-    Column('shift2', Integer),
-    Column('total', Integer),
-    Column('achievement', Float)
-)
-
-# Ensure tables exist
-metadata.create_all(engine)
-
 # Function to initialize session state variables
 def initialize_session_state():
     if 'products' not in st.session_state:
         st.session_state.products = []
     if 'store_name' not in st.session_state:
         st.session_state.store_name = ""
-    if 'start_date' not in st.session_state:
-        st.session_state.start_date = datetime.date.today()
-    if 'end_date' not in st.session_state:
-        st.session_state.end_date = datetime.date.today() + datetime.timedelta(days=6)
-    if 'store_id' not in st.session_state:
-        st.session_state.store_id = None
+    if 'period' not in st.session_state:
+        st.session_state.period = datetime.date.today()
+    if 'data_file' not in st.session_state:
+        st.session_state.data_file = "sales_data.json"
     if 'edit_index' not in st.session_state:
         st.session_state.edit_index = -1
 
-# Function to save data to database
+# Function to save data to a JSON file
 def save_data():
-    with engine.connect() as conn:
-        # Format the dates as string for SQLite
-        start_date_str = st.session_state.start_date.isoformat() if isinstance(st.session_state.start_date, datetime.date) else str(st.session_state.start_date)
-        end_date_str = st.session_state.end_date.isoformat() if isinstance(st.session_state.end_date, datetime.date) else str(st.session_state.end_date)
-        
-        # Check if store already exists
-        if st.session_state.store_id is None:
-            # Insert new store
-            result = conn.execute(
-                stores.insert().values(
-                    store_name=st.session_state.store_name,
-                    start_date=start_date_str,
-                    end_date=end_date_str
-                )
-            )
-            conn.commit()
-            
-            # Get the store ID
-            result = conn.execute(
-                sqlalchemy.select(stores.c.id)
-                .where(stores.c.store_name == st.session_state.store_name)
-                .where(stores.c.start_date == start_date_str)
-                .where(stores.c.end_date == end_date_str)
-                .order_by(stores.c.id.desc())
-                .limit(1)
-            )
-            store_id = result.fetchone()[0]
-            st.session_state.store_id = store_id
-        else:
-            # Update existing store
-            conn.execute(
-                stores.update()
-                .where(stores.c.id == st.session_state.store_id)
-                .values(
-                    store_name=st.session_state.store_name,
-                    start_date=start_date_str,
-                    end_date=end_date_str
-                )
-            )
-            conn.commit()
-            store_id = st.session_state.store_id
-            
-        # Delete existing products for this store
-        conn.execute(products.delete().where(products.c.store_id == store_id))
-        conn.commit()
-        
-        # Insert all products
-        for product in st.session_state.products:
-            conn.execute(
-                products.insert().values(
-                    store_id=store_id,
-                    name=product['name'],
-                    target=product['target'],
-                    shift1=product['shift1'],
-                    shift2=product['shift2'],
-                    total=product['total'],
-                    achievement=product['achievement']
-                )
-            )
-        conn.commit()
+    data = {
+        'store_name': st.session_state.store_name,
+        'period': st.session_state.period.isoformat() if isinstance(st.session_state.period, datetime.date) else st.session_state.period,
+        'products': st.session_state.products
+    }
     
-    st.success("Data berhasil disimpan ke database!")
+    with open(st.session_state.data_file, 'w') as f:
+        json.dump(data, f, indent=4)
+    
+    st.success("Data berhasil disimpan!")
 
-# Function to load data from database
+# Function to load data from a JSON file
 def load_data():
-    with engine.connect() as conn:
-        # Find the latest store data
-        result = conn.execute(
-            sqlalchemy.select(stores)
-            .order_by(stores.c.id.desc())
-            .limit(1)
-        )
-        store_data = result.fetchone()
-        
-        if store_data:
-            st.session_state.store_id = store_data[0]  # id
-            st.session_state.store_name = store_data[1]  # store_name
+    if os.path.exists(st.session_state.data_file):
+        with open(st.session_state.data_file, 'r') as f:
+            data = json.load(f)
             
-            # Convert string date back to datetime object
+            st.session_state.store_name = data.get('store_name', "")
+            
+            # Handle period as date
+            period_str = data.get('period', datetime.date.today().isoformat())
             try:
-                st.session_state.period = datetime.date.fromisoformat(store_data[2])
+                st.session_state.period = datetime.date.fromisoformat(period_str)
             except:
                 st.session_state.period = datetime.date.today()
-            
-            # Get products for this store
-            result = conn.execute(
-                sqlalchemy.select(products)
-                .where(products.c.store_id == st.session_state.store_id)
-            )
-            
-            products_list = []
-            for row in result:
-                products_list.append({
-                    'name': row[2],  # name
-                    'target': row[3],  # target
-                    'shift1': row[4],  # shift1
-                    'shift2': row[5],  # shift2
-                    'total': row[6],   # total
-                    'achievement': row[7]  # achievement
-                })
-            
-            st.session_state.products = products_list
+                
+            st.session_state.products = data.get('products', [])
 
 # Function to add a new product
 def add_product(name, target):
@@ -201,40 +93,21 @@ def add_product(name, target):
 def update_sales(index, shift1, shift2):
     if index >= 0 and index < len(st.session_state.products):
         product = st.session_state.products[index]
-        
-        # Update shift sales and calculate total
         product['shift1'] = shift1
         product['shift2'] = shift2
-        
-        # Calculate total as sum of shifts, but never decrease from previous total
-        new_total = shift1 + shift2
-        if new_total > product['total']:
-            product['total'] = new_total
+        product['total'] = shift1 + shift2
         
         # Calculate achievement percentage
         if product['target'] > 0:
             product['achievement'] = (product['total'] / product['target']) * 100
         else:
             product['achievement'] = 0
-        
-        # Save data immediately to make it permanent
+            
+        # Save data
         save_data()
         
         # Force app to rerun to show updated data
         st.rerun()
-        
-def calculate_totals():
-    for product in st.session_state.products:
-        product['total'] = product['shift1'] + product['shift2']
-        
-        # Calculate achievement percentage
-        if product['target'] > 0:
-            product['achievement'] = (product['total'] / product['target']) * 100
-        else:
-            product['achievement'] = 0
-    
-    # Save data after calculation
-    save_data()
 
 # Function to delete a product
 def delete_product(index):
@@ -257,7 +130,6 @@ def reset_data():
     st.session_state.store_name = ""
     st.session_state.period = datetime.date.today()
     st.session_state.edit_index = -1
-    st.session_state.store_id = None
     save_data()
     st.rerun()
 
@@ -274,12 +146,13 @@ def generate_report():
     report_title = f"Laporan sales *PALING MURAH*"
     
     # Format the period
-    if isinstance(st.session_state.start_date, datetime.date) and isinstance(st.session_state.end_date, datetime.date):
-        start_str = st.session_state.start_date.strftime("%d %B %Y")
-        end_str = st.session_state.end_date.strftime("%d %B %Y")
-        period_str = f"{start_str} - {end_str}"
+    if isinstance(st.session_state.period, datetime.date):
+        period_str = st.session_state.period.strftime("%d - %d %B %Y")
+        # Get the end date (assume 7 days period)
+        end_date = st.session_state.period + datetime.timedelta(days=6)
+        period_str = f"{st.session_state.period.strftime('%d')} - {end_date.strftime('%d %B %Y')}"
     else:
-        period_str = f"{str(st.session_state.start_date)} - {str(st.session_state.end_date)}"
+        period_str = str(st.session_state.period)
         
     report_header = f"Periode : {period_str}\n*{st.session_state.store_name}*\n"
     
@@ -376,12 +249,8 @@ with st.expander("⚙️ Pengaturan Toko dan Periode", expanded=True):
         st.session_state.store_name = store_name
     
     with col2:
-        start_date = st.date_input("Tanggal Mulai", st.session_state.start_date)
-        st.session_state.start_date = start_date
-        
-    with col2:
-        end_date = st.date_input("Tanggal Berakhir", st.session_state.end_date)
-        st.session_state.end_date = end_date
+        period = st.date_input("Periode Laporan", st.session_state.period)
+        st.session_state.period = period
     
     if st.button("Simpan Pengaturan"):
         save_data()

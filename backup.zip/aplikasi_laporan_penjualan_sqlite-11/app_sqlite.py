@@ -201,40 +201,21 @@ def add_product(name, target):
 def update_sales(index, shift1, shift2):
     if index >= 0 and index < len(st.session_state.products):
         product = st.session_state.products[index]
-        
-        # Update shift sales and calculate total
         product['shift1'] = shift1
         product['shift2'] = shift2
-        
-        # Calculate total as sum of shifts, but never decrease from previous total
-        new_total = shift1 + shift2
-        if new_total > product['total']:
-            product['total'] = new_total
+        product['total'] = shift1 + shift2
         
         # Calculate achievement percentage
         if product['target'] > 0:
             product['achievement'] = (product['total'] / product['target']) * 100
         else:
             product['achievement'] = 0
-        
-        # Save data immediately to make it permanent
+            
+        # Save data
         save_data()
         
         # Force app to rerun to show updated data
         st.rerun()
-        
-def calculate_totals():
-    for product in st.session_state.products:
-        product['total'] = product['shift1'] + product['shift2']
-        
-        # Calculate achievement percentage
-        if product['target'] > 0:
-            product['achievement'] = (product['total'] / product['target']) * 100
-        else:
-            product['achievement'] = 0
-    
-    # Save data after calculation
-    save_data()
 
 # Function to delete a product
 def delete_product(index):
